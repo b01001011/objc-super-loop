@@ -74,11 +74,10 @@ static void callout(CFFileDescriptorRef fdref, CFOptionFlags callBackTypes, void
         }];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-//    dispatch_async(dispatch_get_main_queue(), ^{
-        _fd = ::kqueue();
+        self->_fd = ::kqueue();
         
-        _fd_ref = CFFileDescriptorCreate(kCFAllocatorDefault, _fd, true, callout, nullptr);
-        CFRunLoopSourceRef source = CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, _fd_ref, 0);
+        self->_fd_ref = CFFileDescriptorCreate(kCFAllocatorDefault, self->_fd, true, callout, nullptr);
+        CFRunLoopSourceRef source = CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, self->_fd_ref, 0);
         CFRunLoopAddSource(CFRunLoopGetMain(), source, kCFRunLoopDefaultMode);
         CFRelease(source);
         
@@ -107,33 +106,11 @@ static void callout(CFFileDescriptorRef fdref, CFOptionFlags callBackTypes, void
             });
             usleep(5000);
         }
-//        while(true) {
-//            NSDate *expiration = nil;
-//            
-//            NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:expiration inMode:NSDefaultRunLoopMode dequeue:YES];
-//            
-//            if(event.type == 14) {
-//                NSLog(@"# %@", event);
-//            }
-//            
-//            if ([NSThread isMainThread]) {
-//                NSEvent *e = [NSApp currentEvent];
-//                [NSApp sendEvent:e];
-//            } else {
-//                dispatch_async(dispatch_get_main_queue(), ^{
-//                    NSEvent *e = [NSApp currentEvent];
-//                    [NSApp sendEvent:e];
-//                });
-//            }
-//
-//            usleep(5000);
-//        }
     });
     
     dispatch_async(dispatch_get_main_queue(), ^{
         NSLog(@"Another block on the main thread.");
     });
-    
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
