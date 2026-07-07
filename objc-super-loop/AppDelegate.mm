@@ -73,8 +73,7 @@ static void callout(CFFileDescriptorRef fdref, CFOptionFlags callBackTypes, void
             }
         }];
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-//    dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
         _fd = ::kqueue();
         
         _fd_ref = CFFileDescriptorCreate(kCFAllocatorDefault, _fd, true, callout, nullptr);
@@ -83,57 +82,33 @@ static void callout(CFFileDescriptorRef fdref, CFOptionFlags callBackTypes, void
         CFRelease(source);
         
         CFFileDescriptorEnableCallBacks(self->_fd_ref, kCFFileDescriptorReadCallBack);
-        
+
         while(true) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
-                NSDate *expiration = nil;
-                
-                NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:expiration inMode:NSDefaultRunLoopMode dequeue:YES];
-                
-                if(event.type == 14) {
-                    NSLog(@"# %@", event);
-                }
-                
-                if ([NSThread isMainThread]) {
+            NSDate *expiration = nil;
+            
+            NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:expiration inMode:NSDefaultRunLoopMode dequeue:YES];
+            
+            if(event.type == 14) {
+                NSLog(@"# %@", event);
+            }
+            
+            if ([NSThread isMainThread]) {
+                NSEvent *e = [NSApp currentEvent];
+                [NSApp sendEvent:e];
+            } else {
+                dispatch_async(dispatch_get_main_queue(), ^{
                     NSEvent *e = [NSApp currentEvent];
                     [NSApp sendEvent:e];
-                } else {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        NSEvent *e = [NSApp currentEvent];
-                        [NSApp sendEvent:e];
-                    });
-                }
-            });
+                });
+            }
+
             usleep(5000);
         }
-//        while(true) {
-//            NSDate *expiration = nil;
-//            
-//            NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:expiration inMode:NSDefaultRunLoopMode dequeue:YES];
-//            
-//            if(event.type == 14) {
-//                NSLog(@"# %@", event);
-//            }
-//            
-//            if ([NSThread isMainThread]) {
-//                NSEvent *e = [NSApp currentEvent];
-//                [NSApp sendEvent:e];
-//            } else {
-//                dispatch_async(dispatch_get_main_queue(), ^{
-//                    NSEvent *e = [NSApp currentEvent];
-//                    [NSApp sendEvent:e];
-//                });
-//            }
-//
-//            usleep(5000);
-//        }
     });
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         NSLog(@"Another block on the main thread.");
     });
-    
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
